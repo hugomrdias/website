@@ -1,0 +1,39 @@
+{%- set absolutePageUrl -%}{{ info.url }}{{ page.url | url }}{%- endset -%}
+
+<title>{{ info.title }}</title>
+
+{# General #}
+<meta name="description" content="{{ description or info.description }}"/>
+<link rel="canonical" href="{{ absolutePageUrl }}"/>
+
+{# Open Graph #}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{ info.title }}"/>
+<meta property="og:title" content="{{ title or info.title }}"/>
+<meta
+  property="og:description"
+  content="{{ description or info.description }}"
+/>
+<meta property="og:url" content="{{ absolutePageUrl }}"/>
+<meta property="og:locale" content="{{ info.locale }}"/>
+<meta property="og:image" content="{{ image or info.image | url }}"/>
+
+<meta name="twitter:site" content="@{{ info.author.twitterHandle }}">
+<meta name="twitter:creator" content="@{{ info.author.twitterHandle }}">
+<meta
+  name="twitter:card"
+  content="{% if image or info.image -%}summary_large_image{% else %}summary{% endif %}"
+/>
+
+{# Favicon #}
+{% favicons './src/assets/images/fav.png' %}
+
+<link rel="manifest" href="{{ '/site.webmanifest' | url }}">
+<meta name="theme-color" content="#1a1a1a"/>
+<meta name="robots" content="max-snippet:-1, max-image-preview: large, max-video-preview: -1">
+<meta name="referrer" content="no-referrer-when-downgrade">
+<link rel="preconnect" href="/" crossorigin>
+
+{% jsonLdScript meta,
+type,
+tags %}

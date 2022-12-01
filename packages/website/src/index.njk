@@ -1,0 +1,59 @@
+---
+layout: base
+type: page
+eleventyComputed:
+  meta:
+    site:
+      name: "{{ info.name }}"
+      description: "{{ info.title }}"
+      url: "{{ info.url }}"
+      logo:
+        src: "{{ info.image }}"
+        width: 1200
+        height: 630
+    language: "{{ info.locale }}"
+    url: "{{ info.url }}"
+    title: "{{ info.title }}"
+    description: "{{ info.description }}"
+    image:
+      src: "{{ info.image }}"
+---
+
+<div class="container">
+  <div id="box">
+    <div class="inner">
+      <div id="image01" class="image">
+        <span class="frame">
+          {% image "./src/assets/images/avatar.jpg",
+          "Hugo Dias" %}
+        </span>
+      </div>
+      <h1 id="text01">Hugo Dias</h1>
+      <hr id="divider01">
+      <p id="text02">Writing software for Web3 at <a href="https://protocol.ai">Protocol Labs</a>.</p>
+      <ul id="icons01" class="icons">
+        <li>
+          <a class="n01" href="https://twitter.com/hugomrdias">
+            <svg>
+              <use xlink:href="#svg-icon-905"></use>
+            </svg>
+            <span class="label">Twitter</span></a>
+        </li>
+        <li>
+          <a class="n02" href="https://github.com/hugomrdias">
+            <svg>
+              <use xlink:href="#svg-icon-907"></use>
+            </svg>
+            <span class="label">GitHub</span></a>
+        </li>
+        <li>
+          <a class="n03" href="mailto:hugomrdias@gmail.com">
+            <svg>
+              <use xlink:href="#svg-icon-90a"></use>
+            </svg>
+            <span class="label">Email</span></a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

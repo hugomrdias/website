@@ -1,0 +1,10 @@
+{
+  "extends": "hd-scripts/tsconfig.json",
+  "include": [
+    "packages/website/src",
+    "packages/website/.eleventy.js",
+    "test",
+    "package.json"
+  ],
+  "exclude": ["**/node_modules/**"]
+}

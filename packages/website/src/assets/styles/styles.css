@@ -1,0 +1,130 @@
+@import 'sanitize.css';
+@import 'sanitize.css/forms.css';
+@import 'sanitize.css/assets.css';
+@import 'sanitize.css/typography.css';
+@import 'sanitize.css/reduce-motion.css';
+@import 'sanitize.css/system-ui.css';
+@import 'sanitize.css/ui-monospace.css';
+
+@import 'old.css';
+
+:root {
+  --background-height: 100vh;
+  --site-language-alignment: left;
+  --site-language-direction: ltr;
+  --site-language-flex-alignment: flex-start;
+  --viewport-height: 100vh;
+}
+
+:where(hr) {
+  color: inherit;
+  height: inherit;
+}
+
+ol,
+ul {
+  list-style: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: underline;
+  transition: color 0.25s ease;
+}
+
+/* body img {
+  content-visibility: auto;
+} */
+
+body {
+  line-height: 1;
+  min-height: var(--viewport-height);
+  min-width: 320px;
+  overflow: hidden;
+  word-wrap: break-word;
+}
+
+body:before {
+  content: '';
+  display: block;
+  background-attachment: scroll;
+  height: var(--background-height);
+  left: 0;
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  transform: scale(1);
+  width: 100vw;
+  z-index: 0;
+  background-size: 256px, cover, cover;
+  background-position: center, 0% 0%, center;
+  background-repeat: repeat, repeat, no-repeat;
+  background-color: #ffffff;
+}
+
+.fallback body:before {
+  background-image: url(''),
+    linear-gradient(
+      60deg,
+      rgba(246, 79, 79, 0.502) 9%,
+      rgba(211, 163, 41, 0.471) 100%
+    ),
+    url('/assets/images/bg.webp?v=f195fb68');
+}
+.webp body:before {
+  background-image: url(''),
+    linear-gradient(
+      60deg,
+      rgba(246, 79, 79, 0.502) 9%,
+      rgba(211, 163, 41, 0.471) 100%
+    ),
+    url('/assets/images/bg.webp?v=f195fb68');
+}
+.avif body:before {
+  background-image: url(''),
+    linear-gradient(
+      60deg,
+      rgba(246, 79, 79, 0.502) 9%,
+      rgba(211, 163, 41, 0.471) 100%
+    ),
+    url('/assets/images/bg.avif?v=f195fb68');
+}
+
+body:after {
+  background-color: #c2d0d7;
+  content: '';
+  display: block;
+  height: 100%;
+  left: 0;
+  opacity: 0;
+  position: fixed;
+  top: 0;
+  transform: scale(1);
+  transition: opacity 1.25s ease-in-out 0s, visibility 1.25s 0s;
+  visibility: hidden;
+  width: 100%;
+  z-index: 1;
+}
+
+body.is-loading:after {
+  opacity: 1;
+  visibility: visible;
+}
+
+body.is-loading #box {
+  opacity: 0;
+  transform: perspective(1000px) rotateX(16.875deg);
+}
+
+.container {
+  overflow-scrolling: touch;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: var(--viewport-height);
+  overflow: hidden;
+  position: relative;
+  z-index: 2;
+  padding: 1.5625rem 1.5625rem 1.5625rem 1.5625rem;
+}

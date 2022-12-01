@@ -1,0 +1,8 @@
+dist
+.nyc_output
+tmp
+node_modules
+
+.pnpm-debug.log
+.env
+*.http

@@ -1,0 +1,45 @@
+{
+  "name": "app",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "NODE_OPTIONS=--experimental-vm-modules vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "tsc && eslint '**/*.{js,jsx,ts}' && prettier --check '**/*.{js,jsx,ts,yml,json}' --ignore-path ../../.gitignore",
+    "check": "tsc"
+  },
+  "dependencies": {
+    "@acab/reset.css": "^0.5.3",
+    "@preact/signals": "^1.1.2",
+    "@web3-storage/worker-utils": "0.4.3-dev",
+    "cheerio": "1.0.0-rc.12",
+    "preact": "^10.11.1",
+    "preact-router": "^4.1.0",
+    "water.css": "^2.1.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20221111.1",
+    "@preact/preset-vite": "^2.4.0",
+    "@types/node": "^18.8.4",
+    "esbuild": "^0.15.16",
+    "hd-scripts": "^3.0.2",
+    "miniflare": "^2.11.0",
+    "typescript": "4.9.3",
+    "vite": "^3.1.7",
+    "vite-plugin-pwa": "^0.13.3",
+    "workbox-window": "^6.5.4"
+  },
+  "eslintConfig": {
+    "extends": [
+      "./node_modules/hd-scripts/eslint/preact.js"
+    ],
+    "parserOptions": {
+      "project": "./tsconfig.json"
+    },
+    "ignorePatterns": [
+      "dist"
+    ]
+  }
+}

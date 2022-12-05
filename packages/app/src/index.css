@@ -1,0 +1,9 @@
+@import '@acab/reset.css';
+@import 'water.css';
+@import 'styles/main.css';
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+}

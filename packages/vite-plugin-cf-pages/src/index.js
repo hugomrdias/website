@@ -1,8 +1,34 @@
 /* eslint-disable no-console */
 import path from 'path'
-import { build as esbuild } from 'esbuild'
+import { build as esbuild, analyzeMetafile } from 'esbuild'
 import { Log, LogLevel, Miniflare } from 'miniflare'
 import { fromResponse, toRequest } from './utils.js'
+import * as url from 'url'
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
+
+const WORKER_FILE = '_worker.js'
+
+// middleware
+const mid = (/** @type {Miniflare} */ mf) =>
+  /** @type {import('vite').Connect.NextHandleFunction} */ (
+    async (req, res, next) => {
+      try {
+        const mfRequest = toRequest(req)
+
+        // @ts-ignore
+        const mfResponse = await mf.dispatchFetch(mfRequest.url, mfRequest)
+        if (mfResponse.headers.has('x-skip-request')) {
+          return next()
+        }
+
+        // @ts-ignore
+        fromResponse(mfResponse, res)
+      } catch (error) {
+        console.error(error)
+        next(error)
+      }
+    }
+  )
 
 /**
  * Build worker with esbuild
@@ -12,23 +38,30 @@ import { fromResponse, toRequest } from './utils.js'
  * @param {import('vite').ResolvedConfig} config - vite config
  */
 async function build(workerFile, dev, config) {
-  const outfile = config.build.outDir + '/_worker.js'
+  const outfile = config.build.outDir + '/' + WORKER_FILE
   const esbuildOptions = /** @type {import('esbuild').BuildOptions} */ (
     config.esbuild
   )
-  const { rebuild, outputFiles } = await esbuild({
+
+  const { rebuild, outputFiles, metafile } = await esbuild({
     ...esbuildOptions,
-    external: ['__STATIC_CONTENT_MANIFEST'],
     incremental: dev,
-    write: !dev,
     entryPoints: [workerFile],
     bundle: true,
+    inject: [path.join(__dirname, 'globals.js')],
+    define: {
+      global: 'globalThis',
+    },
     allowOverwrite: true,
     format: 'esm',
+    minify: !dev,
     outfile,
+    sourcemap: true,
+    legalComments: 'external',
+    metafile: true,
   })
 
-  return { rebuild, content: outputFiles?.[0].text, outfile }
+  return { rebuild, content: outputFiles?.[0].text, outfile, metafile }
 }
 
 /**
@@ -56,7 +89,8 @@ export default function vitePlugin(options) {
     },
 
     configureServer: async (server) => {
-      const { rebuild, content } = await build(workerFile, true, resolvedConfig)
+      console.log('dev server')
+      const { rebuild } = await build(workerFile, true, resolvedConfig)
 
       // @ts-ignore
       esbuildRebuild = rebuild
@@ -67,9 +101,7 @@ export default function vitePlugin(options) {
         wranglerConfigPath: false,
         packagePath: false,
         ...options.miniflare,
-        // @ts-ignore
-        script: content,
-        watch: true,
+        scriptPath: path.resolve(resolvedConfig.build.outDir, WORKER_FILE),
       })
 
       process.on('beforeExit', async () => {
@@ -77,30 +109,27 @@ export default function vitePlugin(options) {
         rebuild?.dispose()
       })
 
-      // middleware
-      /** @type {import('vite').Connect.NextHandleFunction} */
-      const mid = async (req, res, next) => {
-        try {
-          const mfRequest = toRequest(req)
-
-          // @ts-ignore
-          const mfResponse = await mf.dispatchFetch(mfRequest.url, mfRequest)
-          if (mfResponse.headers.has('x-skip-request')) {
-            return next()
-          }
-
-          // @ts-ignore
-          fromResponse(mfResponse, res)
-        } catch (error) {
-          console.error(error)
-          next(error)
-        }
-      }
-
-      server.middlewares.use(mid)
+      server.middlewares.use(mid(mf))
       return async () => {
         await server.transformRequest(workerFile)
       }
+    },
+
+    configurePreviewServer: async (server) => {
+      mf = new Miniflare({
+        log: new Log(LogLevel.DEBUG),
+        sourceMap: true,
+        wranglerConfigPath: false,
+        packagePath: false,
+        ...options.miniflare,
+        scriptPath: path.resolve(resolvedConfig.build.outDir, WORKER_FILE),
+      })
+
+      process.on('beforeExit', async () => {
+        await mf.dispose()
+      })
+
+      server.middlewares.use(mid(mf))
     },
 
     handleHotUpdate: async ({ file, server }) => {
@@ -110,9 +139,8 @@ export default function vitePlugin(options) {
       )
 
       if (module?.file === workerFile || isImportedByWorkerFile) {
-        const { outputFiles } = await esbuildRebuild()
-        // @ts-ignore
-        await mf.setOptions({ script: outputFiles[0].text })
+        await esbuildRebuild()
+        await mf.reload()
         server.ws.send({ type: 'full-reload' })
         server.config.logger.info(`🔥 [cloudflare] hot reloaded`)
         // we already handle the reload, so we skip the Vite's HMR handling here
@@ -121,10 +149,17 @@ export default function vitePlugin(options) {
     },
 
     closeBundle: async () => {
-      const { outfile } = await build(workerFile, false, resolvedConfig)
+      const { outfile, metafile } = await build(
+        workerFile,
+        false,
+        resolvedConfig
+      )
+
+      const text = await analyzeMetafile(metafile, { color: true })
+      console.log(text)
 
       resolvedConfig.logger.info(
-        `🔥 [cloudflare] bundled worker file in '${path.relative(
+        `🔥 [cloudflare] bundled worker file in '${path.resolve(
           resolvedConfig.root,
           outfile
         )}'`

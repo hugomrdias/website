@@ -1,0 +1,49 @@
+{
+  "name": "vite-plugin-cf-pages",
+  "version": "0.0.1",
+  "description": "Cloudflare Workers Utils",
+  "author": "Hugo Dias <hugomrdias@gmail.com> (hugodias.me)",
+  "license": "MIT",
+  "repository": {
+    "url": "hugomrdias/website",
+    "directory": "packages/vite-cf-pages"
+  },
+  "type": "module",
+  "main": "src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "src",
+    "dist/src/*.d.ts",
+    "dist/src/*.d.ts.map"
+  ],
+  "scripts": {
+    "lint": "tsc && eslint '**/*.{js,ts}' && prettier --check '**/*.{js,ts,yml,json}' --ignore-path ../../.gitignore",
+    "test": "tsc"
+  },
+  "dependencies": {
+    "buffer": "^6.0.3",
+    "esbuild": "^0.16.11",
+    "miniflare": "^2.11.0",
+    "path-browserify": "^1.0.1",
+    "process": "^0.11.10"
+  },
+  "devDependencies": {
+    "hd-scripts": "^3.0.2",
+    "typescript": "4.9.4",
+    "vite": "^4.0.3"
+  },
+  "peerDependencies": {
+    "vite": "^4.0.0"
+  },
+  "eslintConfig": {
+    "extends": [
+      "./node_modules/hd-scripts/eslint/index.js"
+    ],
+    "parserOptions": {
+      "project": "./tsconfig.json"
+    },
+    "ignorePatterns": [
+      "dist"
+    ]
+  }
+}

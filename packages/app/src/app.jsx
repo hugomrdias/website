@@ -1,15 +1,19 @@
 import { Router } from 'preact-router'
-
 import ReloadPrompt from './prompt.jsx'
-import About from './about.jsx'
+import Share from './about.jsx'
+import Login from './login.jsx'
+import Callback from './callback.jsx'
+import Home from './home.jsx'
 
 export function App() {
   return (
     <>
       <main className="App">
-        <h1 className="Home-title">HD App</h1>
         <Router>
-          <About path="/about" />
+          <Home path="/" />
+          <Share path="/share" />
+          <Login path="/login" />
+          <Callback path="/callback" />
         </Router>
         <ReloadPrompt />
       </main>

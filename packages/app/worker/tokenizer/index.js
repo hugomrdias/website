@@ -23,6 +23,21 @@ export function includes(array, element) {
 
 /**
  *
+ * @param {string[]} text
+ * @returns string[]
+ */
+function trim(text) {
+  while (text[text.length - 1] === '') {
+    text.pop()
+  }
+  while (text[0] === '') {
+    text.shift()
+  }
+  return text
+}
+
+/**
+ *
  * @param {string} token
  * @param {import("./types").TokenizerConfig} tokenizerConfig
  */
@@ -32,6 +47,17 @@ function normalizeToken(token, tokenizerConfig) {
   if (normalizationCache.has(key)) {
     return normalizationCache.get(key)
   }
+
+  // remove not word from begining and end
+  token = token.replace(/^\W+/, '').replace(/\W+$/, '')
+
+  // too small
+  if (token.length <= 2) {
+    const token = ''
+    normalizationCache.set(key, token)
+    return token
+  }
+
   // Check if stop-words removal is enabled
   if (tokenizerConfig?.enableStopWords && includes(en, token)) {
     const token = ''
@@ -79,19 +105,4 @@ export function tokenize(input, tokenizerConfig, allowDuplicates = false) {
   }
 
   return trimTokens
-}
-
-/**
- *
- * @param {string[]} text
- * @returns string[]
- */
-function trim(text) {
-  while (text[text.length - 1] === '') {
-    text.pop()
-  }
-  while (text[0] === '') {
-    text.shift()
-  }
-  return text
 }

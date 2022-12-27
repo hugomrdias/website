@@ -2,7 +2,7 @@ import { JSONResponse } from '@web3-storage/worker-utils/response'
 
 /**
  * @param {import('@web3-storage/worker-utils/router').ParsedRequest} request
- * @param {import('./bindings.js').RouteContext} env
+ * @param {import('../bindings.js').RouteContext} env
  */
 export async function postTick(request, env) {
   const data = await request.json()

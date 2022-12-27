@@ -16,6 +16,7 @@ export function toRequest(req) {
     // @ts-ignore
     headers,
     method: req.method,
+    // @ts-ignore
     body:
       req.method === 'GET' || req.method === 'HEAD'
         ? undefined

@@ -17,15 +17,15 @@
     "@quasibit/eleventy-plugin-schema": "^1.10.0",
     "@quasibit/eleventy-plugin-sitemap": "^2.2.0",
     "@types/11ty__eleventy-img": "^2.0.1",
-    "eleventy-plugin-gen-favicons": "^1.1.1",
+    "eleventy-plugin-gen-favicons": "^1.1.2",
     "eleventy-plugin-svg-sprite": "^2.1.0",
-    "esbuild": "^0.15.16",
+    "esbuild": "^0.16.11",
     "hasha": "^5.2.2",
     "html-minifier": "^4.0.0",
     "luxon": "^3.1.1",
-    "postcss": "^8.4.19",
+    "postcss": "^8.4.20",
     "postcss-csso": "^6.0.1",
-    "postcss-import": "^15.0.0",
+    "postcss-import": "^15.1.0",
     "postcss-preset-env": "^7.8.3",
     "purgecss": "^5.0.0",
     "sanitize.css": "^13.0.0"
@@ -33,11 +33,11 @@
   "devDependencies": {
     "@types/html-minifier": "^4.0.2",
     "@types/luxon": "^3.1.0",
-    "@types/node": "^18.11.10",
+    "@types/node": "^18.11.18",
     "@types/postcss-import": "^14.0.0",
     "@types/postcss-preset-env": "^7.7.0",
     "hd-scripts": "^3.0.2",
-    "typescript": "^4.9.3",
+    "typescript": "^4.9.4",
     "web3.storage": "^4.4.0"
   },
   "eslintConfig": {

@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import preact from '@preact/preset-vite'
 import { VitePWA } from 'vite-plugin-pwa'
-import cf from './vite-cf/index.js'
+import cf from 'vite-plugin-cf-pages'
 
 /** @type {import('vite-plugin-pwa').VitePWAOptions} */
 const pwaOptions = {
@@ -18,11 +18,11 @@ const pwaOptions = {
   manifest: {
     name: 'HD App',
     short_name: 'HD App',
-    theme_color: '#5e81ac',
-    background_color: '#5e81ac',
+    theme_color: '#293042',
+    background_color: '#293042',
     // @ts-ignore
     share_target: {
-      action: '/about/',
+      action: '/share/',
       method: 'GET',
       enctype: 'application/x-www-form-urlencoded',
       params: {
@@ -33,14 +33,20 @@ const pwaOptions = {
     },
     icons: [
       {
-        src: '/android-chrome-192x192.png',
+        src: '/icon-192.png',
         sizes: '192x192',
         type: 'image/png',
       },
       {
-        src: '/android-chrome-512x512.png',
+        src: '/icon-512.png',
         sizes: '512x512',
         type: 'image/png',
+      },
+      {
+        src: '/maskable_icon_x192.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'maskable',
       },
       {
         src: '/maskable_icon_x512.png',

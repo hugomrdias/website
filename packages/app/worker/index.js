@@ -1,9 +1,11 @@
 import { errorHandler } from '@web3-storage/worker-utils/error'
 import { JSONResponse, notFound } from '@web3-storage/worker-utils/response'
 import { Router } from '@web3-storage/worker-utils/router'
-import * as cheerio from 'cheerio'
-import { postTick } from './post-tick.js'
+import { parse } from './mercury/index.js'
+import { postTick } from './routes/post-tick.js'
+import { getUser, logout, postFinishLogin, postLogin } from './routes/login.js'
 import { tokenize } from './tokenizer/index.js'
+// import Parser from '@postlight/parser'
 
 /**
  * Obtains a route context object.
@@ -34,28 +36,23 @@ export async function postRoot(request, env) {
  * @param {import('./bindings.js').RouteContext} env
  */
 export async function getMeta(request, env) {
-  const { url } = request.query
-  const rsp = await fetch(url)
-  const $ = cheerio.load(await rsp.text())
+  const { url, text } = request.query
+  const urlParsed = new URL(url || text)
+  const { meta, raw } = await parse(urlParsed)
 
-  const title =
-    $('meta[property=og:title]').attr('content') || $('title').text()
-  const description =
-    $('meta[property=og:description]').attr('content') ||
-    $('meta[name=description]').attr('content')
-  const image = $('meta[property=og:image]').attr('content')
+  const titleTags = tokenize(meta.title || '', { enableStopWords: true })
+  const descriptionTags = tokenize(meta.description || '', {
+    enableStopWords: true,
+  })
 
-  const titleTags = tokenize(title, { enableStopWords: true }, false)
-  const descriptionTags = tokenize(
-    description || '',
-    { enableStopWords: true },
-    false
-  )
   return new JSONResponse({
-    title,
-    description,
-    image,
+    url: url || text,
+    title: meta.title,
+    description: meta.description,
+    image: meta.image,
     tags: [...new Set([...titleTags, ...descriptionTags])],
+    feeds: meta.feeds,
+    content: raw,
   })
 }
 
@@ -63,6 +60,10 @@ export async function getMeta(request, env) {
 const r = new Router({ onNotFound: notFound })
 
 r.add('get', '/api', postRoot)
+r.add('post', '/api/login', postLogin)
+r.add('post', '/api/finish-login', postFinishLogin)
+r.add('post', '/api/logout', logout)
+r.add('get', '/api/user', getUser)
 r.add('get', '/api/meta', getMeta)
 r.add('post', '/api/tick', postTick)
 r.add('get', '*', (request, env) => {

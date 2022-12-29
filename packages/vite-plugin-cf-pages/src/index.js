@@ -4,8 +4,9 @@ import { build as esbuild, analyzeMetafile } from 'esbuild'
 import { Log, LogLevel, Miniflare } from 'miniflare'
 import { fromResponse, toRequest } from './utils.js'
 import * as url from 'url'
+import { createRequire } from 'module'
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
-
+const require = createRequire(import.meta.url)
 const WORKER_FILE = '_worker.js'
 
 // middleware
@@ -43,11 +44,25 @@ async function build(workerFile, dev, config) {
     config.esbuild
   )
 
+  /** @type {ESBuildPlugin} */
+  const nodePlugin = {
+    name: 'node built ins',
+    setup(build) {
+      build.onResolve(
+        { filter: /^decode-named-character-reference$/ },
+        (args) => {
+          return { path: require.resolve('decode-named-character-reference') }
+        }
+      )
+    },
+  }
+
   const { rebuild, outputFiles, metafile } = await esbuild({
     ...esbuildOptions,
     incremental: dev,
     entryPoints: [workerFile],
     bundle: true,
+    plugins: [nodePlugin],
     inject: [path.join(__dirname, 'globals.js')],
     define: {
       global: 'globalThis',
@@ -133,9 +148,11 @@ export default function vitePlugin(options) {
     },
 
     handleHotUpdate: async ({ file, server }) => {
+      const workerDir = path.dirname(workerFile)
       const module = server.moduleGraph.getModuleById(file)
       const isImportedByWorkerFile = [...(module?.importers || [])].some(
-        (importer) => importer.file === workerFile
+        (importer) =>
+          importer.file === workerFile || importer.file?.startsWith(workerDir)
       )
 
       if (module?.file === workerFile || isImportedByWorkerFile) {
@@ -155,8 +172,10 @@ export default function vitePlugin(options) {
         resolvedConfig
       )
 
-      const text = await analyzeMetafile(metafile, { color: true })
-      console.log(text)
+      if (resolvedConfig.command !== 'serve') {
+        const text = await analyzeMetafile(metafile, { color: true })
+        console.log(text)
+      }
 
       resolvedConfig.logger.info(
         `🔥 [cloudflare] bundled worker file in '${path.resolve(

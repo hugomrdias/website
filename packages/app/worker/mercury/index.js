@@ -48,6 +48,18 @@ export async function parse(url, requestOptions) {
         ).toString()
       )
     }
+
+    const anchors = [...node.querySelectorAll('a')]
+    for (const anchor of anchors) {
+      const src = /** @type {string} */ (anchor.getAttribute('href'))
+      anchor.setAttribute(
+        'href',
+        new URL(
+          src || '',
+          src.startsWith('/') ? url.origin : url.href
+        ).toString()
+      )
+    }
   }
 
   return { raw: node.innerHTML, meta }

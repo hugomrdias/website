@@ -9,7 +9,7 @@ export async function fetcher(...args) {
 
 /**
  * @param {string} url
- * @param {Record<string,string>} params
+ * @param {Record<string,string>} [params]
  */
 export async function get(url, params) {
   const u = new URL(url, window.location.origin)
@@ -19,7 +19,7 @@ export async function get(url, params) {
 
   if (!res.ok) {
     const data = await res.json()
-    throw new FetchError('API error', data.error.message, res.status)
+    throw new FetchError('API error', data.error, res.status)
   }
 
   return res.json()
@@ -27,9 +27,9 @@ export async function get(url, params) {
 
 /**
  * @param {string} url
- * @param {Record<string,any>} body
+ * @param {Record<string,any>} [body]
  */
-export async function post(url, body) {
+export async function post(url, body = {}) {
   const u = new URL(url, window.location.origin)
 
   const res = await fetch(u, {
@@ -40,7 +40,7 @@ export async function post(url, body) {
 
   if (!res.ok) {
     const data = await res.json()
-    throw new FetchError('API error', data.error.message, res.status)
+    throw new FetchError('API error', data.error, res.status)
   }
 
   return res.json()

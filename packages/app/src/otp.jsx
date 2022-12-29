@@ -5,8 +5,8 @@ import { FetchError, post } from './libs/utils.js'
 /**
  * @param {import('preact').Attributes} props
  */
-export default function Login(props) {
-  useUser({
+export default function OTP(props) {
+  const { mutateUser } = useUser({
     redirectTo: '/',
     redirectIfFound: true,
   })
@@ -22,11 +22,11 @@ export default function Login(props) {
 
     const body = {
       // @ts-ignore
-      email: event.currentTarget?.email.value,
+      code: event.currentTarget?.code.value,
     }
 
     try {
-      await post('/api/login', body)
+      mutateUser(post('/api/otp', body), false)
     } catch (error) {
       if (error instanceof FetchError) {
         setErrorMsg(error.info)
@@ -59,14 +59,14 @@ function Form({ errorMessage, onSubmit }) {
   return (
     <form onSubmit={onSubmit} autoComplete="on">
       <label>
-        <span>Type your email</span>
+        <span>Type your code</span>
         <input
-          type="email"
-          name="email"
+          type="code"
+          name="code"
           required
           autoFocus
-          placeholder="john@gmail.com"
-          autoComplete="email"
+          placeholder="123456"
+          autoComplete="code"
         />
       </label>
 

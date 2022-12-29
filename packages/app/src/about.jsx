@@ -1,61 +1,53 @@
-import { signal, effect } from '@preact/signals'
 import useSWR from 'swr'
 import Markdown from 'preact-markdown'
-import { get } from './libs/utils.js'
+import { get, post } from './libs/utils.js'
+import useUser from './libs/use-user.js'
+import { Footer, TopBar } from './app.jsx'
+import { useState } from 'preact/hooks'
 
-const cookie = signal(localStorage.getItem('ticktick-cookie') || '')
-effect(() => localStorage.setItem('ticktick-cookie', cookie.value || ''))
 /**
  * @param {import('preact').Attributes} props
  */
-function About(props) {
-  const parsedUrl = new URL(window.location.href)
+function Share(props) {
+  const { user } = useUser({
+    redirectTo: '/login',
+  })
 
-  const onInput = (event) => (cookie.value = event.target.value)
-  const onSave = () => {
-    const tags = [...document.querySelectorAll('.tags:checked')].map(
+  const [isFetchingFeed, setFetchingFeed] = useState()
+  const [isSaving, setSaving] = useState(false)
+  const [saveResult, setSaveResult] = useState()
+
+  const onSave = async () => {
+    const tags = [...document.querySelectorAll('#tags option:checked')].map(
+      // @ts-ignore
       (e) => e.value
     )
 
-    fetch(window.location.origin + '/api/tick', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        url: parsedUrl.searchParams.get('text'),
-        title: data.value.title,
-        description: data.value.description,
-        image: data.value.image,
-        tags,
-        cookie: cookie.value,
-      }),
+    setSaving(true)
+    const out = await post('/api/bookmark', {
+      ...data,
+      tags,
     })
-      .then((rsp) => rsp.json())
-      .then((rsp) => console.log(rsp))
+
+    setSaveResult(JSON.stringify(out, null, 2))
+    setSaving(false)
   }
 
-  const onSubscribe = (url) => () => {
-    fetch('https://api.feedbin.com/v2/subscriptions.json', {
-      method: 'POST',
-      body: JSON.stringify({
-        feed_url: url,
-      }),
-      headers: {
-        Authorization: 'Basic aHVnb21yZGlhczo5KjNQLkM2Q2dCeGNBNFJhSm4uVQ==',
-      },
+  const feedSubscribe = useSWR(isFetchingFeed, async (key) => {
+    await post('/api/subscribe', {
+      feed: isFetchingFeed,
     })
-      .then((rsp) => rsp.json())
-      .then((rsp) => console.log(rsp))
-  }
+    // eslint-disable-next-line unicorn/no-useless-undefined
+    setFetchingFeed(undefined)
+  })
 
   const { data, error } = useSWR('/api/meta', async (key) => {
+    const parsedUrl = new URL(window.location.href)
     const out = await get(key, {
       title: parsedUrl.searchParams.get('title') || '',
       text: parsedUrl.searchParams.get('text') || '',
       url: parsedUrl.searchParams.get('url') || '',
     })
-    console.log(out)
     return out
   })
 
@@ -63,78 +55,90 @@ function About(props) {
   if (!data) return <div>loading...</div>
 
   return (
-    <div className="About">
-      <h1>Share Data</h1>
-      <img src={data.image} style="max-width: 200px" width="200" height="200" />
-      <blockquote cite={data.url}>
-        {data.description}{' '}
-        <footer>
-          <cite>{data.title}</cite>
-        </footer>
-      </blockquote>
-      {data.feeds.length > 0 ? (
-        <table>
-          <colgroup>
-            <col style="width: 80%;" />
-            <col style="width: 150px;" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th>Feed</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.feeds.map((feed) => {
-              return (
-                <tr key={feed.tittle}>
-                  <td class="truncate">
-                    {feed.title} <br />{' '}
-                    <small>
-                      <a href={feed.url} target="_blank" rel="noreferrer">
-                        {feed.url}
-                      </a>
-                    </small>
-                  </td>
-                  <td>
-                    <button onClick={onSubscribe(feed.url)}>Subscribe</button>
-                  </td>
+    <>
+      <TopBar user={user} title="Share" />
+      <div className="About">
+        <img
+          src={data.image}
+          style="max-width: 200px"
+          width="200"
+          height="200"
+        />
+        <blockquote cite={data.url}>
+          {data.description}{' '}
+          <footer>
+            <cite>{data.title}</cite>
+          </footer>
+        </blockquote>
+        {data.feeds.length > 0 ? (
+          <>
+            <table>
+              <colgroup>
+                <col style="width: 80%;" />
+                <col style="width: 150px;" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>Feed</th>
+                  <th>Action</th>
                 </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      ) : (
-        ''
-      )}
-      <h5>Tags:</h5>
-      <select id="multiple-select" multiple>
-        {data.tags.map((tag) => {
-          return (
-            <option key={tag} value={tag}>
-              {tag}
-            </option>
-          )
-        })}
-      </select>
-      <button type="button" onClick={onSave}>
-        Save
-      </button>
-      <br />
+              </thead>
+              <tbody>
+                {data.feeds.map((feed) => {
+                  return (
+                    <tr key={feed.title}>
+                      <td class="truncate">
+                        {feed.title} <br />{' '}
+                        <small>
+                          <a href={feed.url} target="_blank" rel="noreferrer">
+                            {feed.url}
+                          </a>
+                        </small>
+                      </td>
+                      <td>
+                        <button
+                          onClick={() => {
+                            setFetchingFeed(feed.url)
+                          }}
+                          disabled={isFetchingFeed}
+                        >
+                          {isFetchingFeed === feed.url ? '...' : 'Subscribe'}
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+            {feedSubscribe.error && <p>{feedSubscribe.error.info}</p>}
+          </>
+        ) : (
+          ''
+        )}
+        <h5>Tags:</h5>
+        <select id="tags" multiple>
+          {data.tags.map((tag) => {
+            return (
+              <option key={tag} value={tag}>
+                {tag}
+              </option>
+            )
+          })}
+        </select>
+        <button type="button" onClick={onSave}>
+          {isSaving ? 'Saving' : 'Save'}
+        </button>
+        {saveResult && <textarea value={saveResult} />}
+        <br />
 
-      <Markdown markdown={data.content} />
-      <br />
-      <label for="tick">ticktick cookie: </label>
-      <textarea
-        id="tick"
-        type="text"
-        value={cookie.value}
-        onInput={onInput}
-        placeholder="copy/paste ticktick cookie here"
-      />
-      <a href="/">Go Home</a>
-    </div>
+        <details>
+          <summary>Preview</summary>
+          <Markdown markdown={data.content} />
+        </details>
+      </div>
+      <Footer />
+    </>
   )
 }
 
-export default About
+export default Share

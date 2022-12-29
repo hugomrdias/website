@@ -1,15 +1,6 @@
 import { useRegisterSW } from 'virtual:pwa-register/preact'
-import { pwaInfo } from 'virtual:pwa-info'
-
-// eslint-disable-next-line no-console
-console.log(pwaInfo)
 
 function ReloadPrompt() {
-  // replaced dynamically
-  const buildDate = '__DATE__'
-  // replaced dyanmicaly
-  const reloadSW = '__RELOAD_SW__'
-
   const {
     offlineReady: [offlineReady, setOfflineReady],
     needRefresh: [needRefresh, setNeedRefresh],
@@ -18,18 +9,6 @@ function ReloadPrompt() {
     onRegisteredSW: (swUrl, r) => {
       // eslint-disable-next-line no-console
       console.log(`Service Worker at: ${swUrl}`)
-      // @ts-expect-error just ignore
-      if (reloadSW === 'true') {
-        r &&
-          setInterval(() => {
-            // eslint-disable-next-line no-console
-            console.log('Checking for sw update')
-            r.update()
-          }, 20_000 /* 20s for testing purposes */)
-      } else {
-        // eslint-disable-next-line prefer-template,no-console
-        console.log('SW Registered: ' + r)
-      }
     },
     onRegisterError: (error) => {
       // eslint-disable-next-line no-console
@@ -68,7 +47,6 @@ function ReloadPrompt() {
           </button>
         </div>
       )}
-      <div className="ReloadPrompt-date">{buildDate}</div>
     </div>
   )
 }

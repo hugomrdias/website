@@ -48,3 +48,10 @@ https://github.com/postlight/parser
 # metadata
 
 https://github.com/gorango/rehype-extract-meta/blob/main/lib/candidates.js
+
+# icons
+
+Sprite is in index.html
+https://icomoon.io/app/#/select
+
+Typicons set

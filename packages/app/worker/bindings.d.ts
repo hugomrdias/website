@@ -1,54 +1,44 @@
-import type { Handler as _Handler } from '@web3-storage/worker-utils/router'
+import { Hono, Handler as HonoHandler } from 'hono'
+import { IronSession } from 'iron-session'
+import { Email } from './utils/email.js'
+import { Users } from './utils/users.js'
 export {}
-
-// CF Analytics Engine types not available yet
-export interface AnalyticsEngine {
-  writeDataPoint: (event: AnalyticsEngineEvent) => void
-}
-
-export interface AnalyticsEngineEvent {
-  readonly doubles?: number[]
-  readonly blobs?: Array<ArrayBuffer | string | null>
-}
 
 export interface Env {
   // vars
   ENV: string
   DEBUG: string
+  POSTMARK_TOKEN: string
+  SESSION_SECRET: string
   ASSETS: { fetch: (request: Request) => Promise<Response> }
+  USERS: KVNamespace
 }
 
-export interface RouteContext {
+export interface Vars {
   url: URL
-  env: Env
+  email: Email
+  users: Users
 }
 
-export type Handler = _Handler<RouteContext>
-
-export type Bindings = Record<
+export type App = Hono<{ Bindings: Env; Variables: Vars }>
+export type AppHandler<T = any> = HonoHandler<
   string,
-  | KVNamespace
-  | DurableObjectNamespace
-  | CryptoKey
-  | string
-  | D1Database
-  | AnalyticsEngine
+  { Bindings: Env; Variables: Vars },
+  T
 >
-declare namespace ModuleWorker {
-  type FetchHandler<Environment extends Bindings = Bindings> = (
-    request: Request,
-    env: Environment,
-    ctx: Pick<FetchEvent, 'waitUntil' | 'passThroughOnException'>
-  ) => Promise<Response> | Response
 
-  type CronHandler<Environment extends Bindings = Bindings> = (
-    event: Omit<ScheduledEvent, 'waitUntil'>,
-    env: Environment,
-    ctx: Pick<ScheduledEvent, 'waitUntil'>
-  ) => Promise<void> | void
+export type ExtractValidationType<T> = Parameters<
+  ReturnType<T>
+>[0]['req']['data']
+
+declare module 'iron-session' {
+  interface IronSessionData {
+    user: { email: string; isLoggedIn: boolean; otp: boolean }
+  }
 }
 
-export interface ModuleWorker {
-  fetch?: ModuleWorker.FetchHandler<Env>
-  scheduled?: ModuleWorker.CronHandler<Env>
+declare module 'hono' {
+  interface ContextVariableMap {
+    session: IronSession
+  }
 }

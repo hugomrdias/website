@@ -1,6 +1,7 @@
 import { useEffect } from 'preact/hooks'
 import useUser from './libs/use-user.js'
 import { post } from './libs/utils.js'
+import { route } from 'preact-router'
 
 /**
  * @param {import('preact').Attributes} props
@@ -14,10 +15,15 @@ export default function Callback(props) {
 
   useEffect(() => {
     async function finishLogin() {
-      const user = await post('/api/finish-login', {
+      const data = await post('/api/finish-login', {
         seal: parsedUrl.searchParams.get('seal'),
       })
-      mutateUser(user, false)
+
+      if (data.otp) {
+        route('/otp', true)
+      } else {
+        mutateUser()
+      }
     }
 
     finishLogin()

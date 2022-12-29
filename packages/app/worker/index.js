@@ -1,88 +1,92 @@
-import { errorHandler } from '@web3-storage/worker-utils/error'
-import { JSONResponse, notFound } from '@web3-storage/worker-utils/response'
-import { Router } from '@web3-storage/worker-utils/router'
-import { parse } from './mercury/index.js'
-import { postTick } from './routes/post-tick.js'
-import { getUser, logout, postFinishLogin, postLogin } from './routes/login.js'
-import { tokenize } from './tokenizer/index.js'
-// import Parser from '@postlight/parser'
+import { Hono } from 'hono'
+import { logger } from 'hono/logger'
+import { getIronSession } from 'iron-session/edge'
+import { subscribe } from './routes/feedbin.js'
+import { getMeta, metaValidator } from './routes/get-meta.js'
+import {
+  checkOTP,
+  getOTP,
+  getUser,
+  logout,
+  postFinishLogin,
+  postLogin,
+  postOTP,
+  postUser,
+} from './routes/login.js'
+import { bookmark } from './routes/ticktick.js'
+// import { postTick } from './routes/post-tick.js'
+import { Email } from './utils/email.js'
+import { auth } from './utils/session.js'
+import { Users } from './utils/users.js'
 
-/**
- * Obtains a route context object.
- *
- * @param {Request} request
- * @param {import('./bindings').Env} env
- * @param {Pick<FetchEvent, 'waitUntil' | 'passThroughOnException'>} ctx
- * @returns {import('./bindings').RouteContext}
- */
-export function getContext(request, env, ctx) {
-  const url = new URL(request.url)
-  return {
-    url,
-    env,
-  }
-}
-
-/**
- * @param {import('@web3-storage/worker-utils/router').ParsedRequest} request
- * @param {import('./bindings.js').RouteContext} env
- */
-export async function postRoot(request, env) {
-  return new JSONResponse(env.env)
-}
-
-/**
- * @param {import('@web3-storage/worker-utils/router').ParsedRequest} request
- * @param {import('./bindings.js').RouteContext} env
- */
-export async function getMeta(request, env) {
-  const { url, text } = request.query
-  const urlParsed = new URL(url || text)
-  const { meta, raw } = await parse(urlParsed)
-
-  const titleTags = tokenize(meta.title || '', { enableStopWords: true })
-  const descriptionTags = tokenize(meta.description || '', {
-    enableStopWords: true,
-  })
-
-  return new JSONResponse({
-    url: url || text,
-    title: meta.title,
-    description: meta.description,
-    image: meta.image,
-    tags: [...new Set([...titleTags, ...descriptionTags])],
-    feeds: meta.feeds,
-    content: raw,
-  })
-}
-
-/** @type Router<import('./bindings.js').RouteContext> */
-const r = new Router({ onNotFound: notFound })
-
-r.add('get', '/api', postRoot)
-r.add('post', '/api/login', postLogin)
-r.add('post', '/api/finish-login', postFinishLogin)
-r.add('post', '/api/logout', logout)
-r.add('get', '/api/user', getUser)
-r.add('get', '/api/meta', getMeta)
-r.add('post', '/api/tick', postTick)
-r.add('get', '*', (request, env) => {
-  return env.env.ENV === 'dev'
+/** @type {import('./bindings').App} */
+const app = new Hono()
+app.notFound((c) => {
+  return c.env.ENV === 'dev'
     ? new Response('', { headers: { 'x-skip-request': '' } })
-    : env.env.ASSETS.fetch(request)
+    : c.env.ASSETS.fetch(c.req)
 })
 
-/** @type {import('./bindings.js').ModuleWorker} */
-const worker = {
-  fetch: async (request, env, ctx) => {
-    const context = getContext(request, env, ctx)
-    try {
-      const rsp = await r.fetch(request, context, ctx)
-      return rsp
-    } catch (error) {
-      return errorHandler(/** @type {Error} */ (error))
-    }
-  },
-}
+app.onError((c) => {
+  // eslint-disable-next-line no-console
+  console.error(c)
 
-export default worker
+  return new Response(
+    JSON.stringify({
+      error: c.message,
+      name: c.name,
+    }),
+    {
+      status: 500,
+      headers: {
+        'content-type': 'application/json;charset=UTF-8',
+      },
+    }
+  )
+})
+
+// app.use('*', logger())
+
+app.use('*', async (c, next) => {
+  const session = await getIronSession(c.req, c.res, {
+    password: c.env.SESSION_SECRET,
+    cookieName: 'hd-app',
+    cookieOptions: {
+      secure: c.env.ENV === 'production',
+    },
+  })
+
+  c.set('session', session)
+  await next()
+})
+
+app.use('*', async (c, next) => {
+  c.set('url', new URL(c.req.url))
+  c.set(
+    'email',
+    new Email({
+      token: c.env.POSTMARK_TOKEN,
+    })
+  )
+  c.set('users', new Users(c.env.USERS))
+  await next()
+})
+
+app.get('/api', (c, next) => {
+  return c.json(c.env)
+})
+
+app.post('/api/login', postLogin)
+app.post('/api/finish-login', postFinishLogin)
+app.post('/api/otp', checkOTP)
+app.post('/api/logout', logout)
+app.get('/api/user', auth, getUser)
+app.post('/api/user', auth, postUser)
+app.get('/api/user/otp', auth, getOTP)
+app.post('/api/user/otp', auth, postOTP)
+app.get('/api/meta', auth, metaValidator(), getMeta)
+
+app.post('/api/subscribe', auth, subscribe)
+app.post('/api/bookmark', auth, bookmark)
+
+export default app

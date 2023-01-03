@@ -73,7 +73,8 @@ export default function vitePlugin(options) {
   let resolvedConfig
   /** @type {string} */
   let workerFile
-
+  /** @type {import('esbuild').Metafile} */
+  let esbuildMetafile
   /** @type {import('esbuild').BuildInvalidate} */
   let esbuildRebuild
   return {
@@ -86,13 +87,14 @@ export default function vitePlugin(options) {
 
     configureServer: async (server) => {
       console.log('dev server')
-      const { rebuild } = await build(
+      const { rebuild, metafile } = await build(
         workerFile,
         true,
         resolvedConfig,
         options.esbuild
       )
 
+      esbuildMetafile = metafile
       // @ts-ignore
       esbuildRebuild = rebuild
 
@@ -134,14 +136,10 @@ export default function vitePlugin(options) {
     },
 
     handleHotUpdate: async ({ file, server }) => {
-      const workerDir = path.dirname(workerFile)
-      const module = server.moduleGraph.getModuleById(file)
-      const isImportedByWorkerFile = [...(module?.importers || [])].some(
-        (importer) =>
-          importer.file === workerFile || importer.file?.startsWith(workerDir)
-      )
+      const inputs = Object.keys(esbuildMetafile.inputs)
+      const fileRelativePath = path.relative(resolvedConfig.root, file)
 
-      if (module?.file === workerFile || isImportedByWorkerFile) {
+      if (inputs.includes(fileRelativePath)) {
         await esbuildRebuild()
         await mf.reload()
         server.ws.send({ type: 'full-reload' })

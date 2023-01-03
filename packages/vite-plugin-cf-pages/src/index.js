@@ -4,9 +4,7 @@ import { build as esbuild, analyzeMetafile } from 'esbuild'
 import { Log, LogLevel, Miniflare } from 'miniflare'
 import { fromResponse, toRequest } from './utils.js'
 import * as url from 'url'
-import { createRequire } from 'module'
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
-const require = createRequire(import.meta.url)
 const WORKER_FILE = '_worker.js'
 
 // middleware
@@ -37,32 +35,15 @@ const mid = (/** @type {Miniflare} */ mf) =>
  * @param {string} workerFile
  * @param {boolean} dev
  * @param {import('vite').ResolvedConfig} config - vite config
+ * @param {import('esbuild').BuildOptions} [options] - esbuild options
  */
-async function build(workerFile, dev, config) {
+async function build(workerFile, dev, config, options = {}) {
   const outfile = config.build.outDir + '/' + WORKER_FILE
-  const esbuildOptions = /** @type {import('esbuild').BuildOptions} */ (
-    config.esbuild
-  )
-
-  /** @type {ESBuildPlugin} */
-  const nodePlugin = {
-    name: 'node built ins',
-    setup(build) {
-      build.onResolve(
-        { filter: /^decode-named-character-reference$/ },
-        (args) => {
-          return { path: require.resolve('decode-named-character-reference') }
-        }
-      )
-    },
-  }
-
   const { rebuild, outputFiles, metafile } = await esbuild({
-    ...esbuildOptions,
+    ...options,
     incremental: dev,
     entryPoints: [workerFile],
     bundle: true,
-    plugins: [nodePlugin],
     inject: [path.join(__dirname, 'globals.js')],
     define: {
       global: 'globalThis',
@@ -105,7 +86,12 @@ export default function vitePlugin(options) {
 
     configureServer: async (server) => {
       console.log('dev server')
-      const { rebuild } = await build(workerFile, true, resolvedConfig)
+      const { rebuild } = await build(
+        workerFile,
+        true,
+        resolvedConfig,
+        options.esbuild
+      )
 
       // @ts-ignore
       esbuildRebuild = rebuild
@@ -169,11 +155,14 @@ export default function vitePlugin(options) {
       const { outfile, metafile } = await build(
         workerFile,
         false,
-        resolvedConfig
+        resolvedConfig,
+        options.esbuild
       )
 
-      if (resolvedConfig.command !== 'serve') {
-        const text = await analyzeMetafile(metafile, { color: true })
+      if (resolvedConfig.command === 'build') {
+        const text = await analyzeMetafile(metafile, {
+          color: true,
+        })
         console.log(text)
       }
 

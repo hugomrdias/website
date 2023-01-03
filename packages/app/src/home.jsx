@@ -60,6 +60,11 @@ export default function Home(props) {
         <button
           type="button"
           onClick={async () => {
+            // @ts-ignore
+            // eslint-disable-next-line no-undef
+            google.accounts.id.revoke(user?.email, (done) => {
+              console.log('consent revoked')
+            })
             await post('/api/logout')
             mutateUser(undefined, false)
             route('/login')

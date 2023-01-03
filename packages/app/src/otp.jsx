@@ -66,7 +66,7 @@ function Form({ errorMessage, onSubmit }) {
           required
           autoFocus
           placeholder="123456"
-          autoComplete="code"
+          autoComplete="one-time-code"
         />
       </label>
 

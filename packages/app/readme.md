@@ -1,3 +1,9 @@
+# TODO
+
+- [ ] use onLoad event to make sure globalThis.google is loading
+- [ ] add cache to fetch google certs
+- [ ] change hono validation code https://github.com/honojs/hono/blob/main/docs/MIGRATION.md#v271---v2xx
+
 # Icons
 
 https://fonts.google.com/icons?icon.query=network&icon.style=Outlined
@@ -55,3 +61,5 @@ Sprite is in index.html
 https://icomoon.io/app/#/select
 
 Typicons set
+
+## Google Sign in

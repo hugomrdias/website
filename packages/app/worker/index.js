@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { logger } from 'hono/logger'
+// import { logger } from 'hono/logger'
 import { getIronSession } from 'iron-session/edge'
 import { subscribe } from './routes/feedbin.js'
 import { getMeta, metaValidator } from './routes/get-meta.js'
@@ -12,9 +12,9 @@ import {
   postLogin,
   postOTP,
   postUser,
+  postValidate,
 } from './routes/login.js'
 import { bookmark } from './routes/ticktick.js'
-// import { postTick } from './routes/post-tick.js'
 import { Email } from './utils/email.js'
 import { auth } from './utils/session.js'
 import { Users } from './utils/users.js'
@@ -78,6 +78,7 @@ app.get('/api', (c, next) => {
 
 app.post('/api/login', postLogin)
 app.post('/api/finish-login', postFinishLogin)
+app.post('/api/validate', postValidate)
 app.post('/api/otp', checkOTP)
 app.post('/api/logout', logout)
 app.get('/api/user', auth, getUser)

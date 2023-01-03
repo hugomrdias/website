@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "NODE_OPTIONS=\"--experimental-vm-modules\" vite preview",
     "lint": "tsc && eslint '**/*.{js,jsx,ts}' && prettier --check '**/*.{js,jsx,ts,yml,json}' --ignore-path ../../.gitignore",
-    "check": "tsc"
+    "check": "tsc",
+    "deploy": "wrangler pages publish --project-name app --branch master dist"
   },
   "dependencies": {
     "@acab/reset.css": "^0.5.3",
@@ -17,6 +18,7 @@
     "@web3-storage/worker-utils": "0.4.3-dev",
     "hono": "^2.7.0",
     "iron-session": "^6.3.1",
+    "iso-base": "workspace:^0.0.1",
     "linkedom": "^0.14.21",
     "preact": "^10.11.1",
     "preact-markdown": "^2.1.0",
@@ -28,6 +30,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20221111.1",
     "@preact/preset-vite": "^2.5.0",
+    "@types/google.accounts": "^0.0.5",
     "@types/qrcode": "^1.5.0",
     "dotenv": "^16.0.3",
     "esbuild": "^0.16.11",

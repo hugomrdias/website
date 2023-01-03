@@ -2,6 +2,7 @@ import { sealData, unsealData } from 'iron-session/edge'
 import { buildURL, parse, totp } from 'micro-otp'
 import { generateKey } from '../utils/otp.js'
 import QRCode from 'qrcode'
+import { getGoogleCerts, verifyToken } from '../utils/google.js'
 
 /** @type {import('../bindings.js').AppHandler} */
 export async function postLogin(c) {
@@ -52,6 +53,39 @@ export async function postFinishLogin(c) {
   session.user = out
   await session.save()
   return c.json(out)
+}
+
+/** @type {import('../bindings.js').AppHandler} */
+export async function postValidate(c) {
+  const { token } = await c.req.json()
+  const session = c.get('session')
+
+  try {
+    const { payload } = await verifyToken(token, await getGoogleCerts())
+    let user = await c
+      .get('users')
+      .getOrCreate(/** @type {string} */ (payload.email))
+
+    await c.get('users').put(payload.email, { google: payload })
+
+    const out = { email: user.email, isLoggedIn: false, otp: false }
+
+    if (user.otp) {
+      out.otp = true
+    } else {
+      out.isLoggedIn = true
+    }
+
+    session.user = out
+    await session.save()
+    return c.json(out)
+  } catch (error) {
+    return c.json({
+      error: 'Failed google sign in validation.',
+      // @ts-ignore
+      message: error.message,
+    })
+  }
 }
 
 /** @type {import('../bindings.js').AppHandler} */

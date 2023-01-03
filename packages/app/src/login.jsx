@@ -1,4 +1,5 @@
-import { useState } from 'preact/hooks'
+import { route } from 'preact-router'
+import { useEffect, useState } from 'preact/hooks'
 import useUser from './libs/use-user.js'
 import { FetchError, post } from './libs/utils.js'
 
@@ -6,16 +7,40 @@ import { FetchError, post } from './libs/utils.js'
  * @param {import('preact').Attributes} props
  */
 export default function Login(props) {
-  useUser({
+  const { mutateUser } = useUser({
     redirectTo: '/',
     redirectIfFound: true,
   })
 
   const [errorMsg, setErrorMsg] = useState('')
 
+  useEffect(() => {
+    async function run() {
+      if (globalThis.google) {
+        globalThis.google.accounts.id.initialize({
+          client_id:
+            '988377666163-om4unmof6tv868hhgpk5m31dtr2e74nb.apps.googleusercontent.com',
+          callback: async (credentialResponse) => {
+            const data = await post('/api/validate', {
+              token: credentialResponse.credential,
+            })
+
+            if (data.otp) {
+              route('/otp', true)
+            } else {
+              mutateUser()
+            }
+          },
+        })
+        globalThis.google.accounts.id.prompt()
+      }
+    }
+
+    run()
+  }, [mutateUser])
+
   /**
-   *
-   * @param {SubmitEvent} event
+   * @type {import('preact').JSX.GenericEventHandler<HTMLFormElement>}
    */
   async function handleSubmit(event) {
     event.preventDefault()
@@ -42,6 +67,7 @@ export default function Login(props) {
       <div className="login">
         <Form errorMessage={errorMsg} onSubmit={handleSubmit} />
       </div>
+
       <style jsx>{`
         .login {
           max-width: 21rem;
@@ -55,6 +81,12 @@ export default function Login(props) {
   )
 }
 
+/**
+ *
+ * @param {object} props
+ * @param {string} props.errorMessage
+ * @param {import('preact').JSX.GenericEventHandler<HTMLFormElement>} props.onSubmit
+ */
 function Form({ errorMessage, onSubmit }) {
   return (
     <form onSubmit={onSubmit} autoComplete="on">

@@ -5,7 +5,9 @@ import preact from '@preact/preset-vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import cf from 'vite-plugin-cf-pages'
 import dotenv from 'dotenv'
+import { createRequire } from 'module'
 
+const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 dotenv.config({
   path: path.join(__dirname, '..', '..', '.env'),
@@ -62,6 +64,19 @@ const pwaOptions = {
     ],
   },
 }
+
+/** @type {import('esbuild').Plugin} */
+const esbuildAlias = {
+  name: 'alias',
+  setup(build) {
+    build.onResolve(
+      { filter: /^decode-named-character-reference$/ },
+      (args) => {
+        return { path: require.resolve('decode-named-character-reference') }
+      }
+    )
+  },
+}
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
   return command === 'serve'
@@ -74,6 +89,9 @@ export default defineConfig(({ command, mode }) => {
           VitePWA(pwaOptions),
           cf({
             scriptPath: './worker/index.js',
+            esbuild: {
+              plugins: [esbuildAlias],
+            },
             miniflare: {
               modules: true,
               compatibilityDate: '2022-12-01',
@@ -96,6 +114,9 @@ export default defineConfig(({ command, mode }) => {
           preact(),
           cf({
             scriptPath: './worker/index.js',
+            esbuild: {
+              plugins: [esbuildAlias],
+            },
           }),
         ],
       }

@@ -1,5 +1,6 @@
 import { route } from 'preact-router'
-import { useEffect, useState } from 'preact/hooks'
+import { useState } from 'preact/hooks'
+import { useGoogle } from './libs/use-onload.js'
 import useUser from './libs/use-user.js'
 import { FetchError, post } from './libs/utils.js'
 
@@ -14,30 +15,24 @@ export default function Login(props) {
 
   const [errorMsg, setErrorMsg] = useState('')
 
-  useEffect(() => {
-    async function run() {
-      if (globalThis.google) {
-        globalThis.google.accounts.id.initialize({
-          client_id:
-            '988377666163-om4unmof6tv868hhgpk5m31dtr2e74nb.apps.googleusercontent.com',
-          callback: async (credentialResponse) => {
-            const data = await post('/api/validate', {
-              token: credentialResponse.credential,
-            })
-
-            if (data.otp) {
-              route('/otp', true)
-            } else {
-              mutateUser()
-            }
-          },
+  useGoogle(
+    {
+      client_id:
+        '988377666163-om4unmof6tv868hhgpk5m31dtr2e74nb.apps.googleusercontent.com',
+      callback: async (credentialResponse) => {
+        const data = await post('/api/validate-google', {
+          token: credentialResponse.credential,
         })
-        globalThis.google.accounts.id.prompt()
-      }
-    }
 
-    run()
-  }, [mutateUser])
+        if (data.otp) {
+          route('/otp', true)
+        } else {
+          mutateUser()
+        }
+      },
+    },
+    true
+  )
 
   /**
    * @type {import('preact').JSX.GenericEventHandler<HTMLFormElement>}

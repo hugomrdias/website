@@ -15,7 +15,7 @@ export default function Callback(props) {
 
   useEffect(() => {
     async function finishLogin() {
-      const data = await post('/api/finish-login', {
+      const data = await post('/api/validate-email', {
         seal: parsedUrl.searchParams.get('seal'),
       })
 

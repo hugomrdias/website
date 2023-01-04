@@ -33,7 +33,7 @@ export async function postLogin(c) {
 }
 
 /** @type {import('../bindings.js').AppHandler} */
-export async function postFinishLogin(c) {
+export async function validateEmail(c) {
   const data = await c.req.json()
   const session = c.get('session')
   const { email } = await unsealData(data.seal, {
@@ -56,13 +56,13 @@ export async function postFinishLogin(c) {
 }
 
 /** @type {import('../bindings.js').AppHandler} */
-export async function postValidate(c) {
+export async function validateGoogle(c) {
   const { token } = await c.req.json()
   const session = c.get('session')
 
   try {
     const { payload } = await verifyToken(token, await getGoogleCerts())
-    let user = await c
+    const user = await c
       .get('users')
       .getOrCreate(/** @type {string} */ (payload.email))
 
@@ -102,6 +102,15 @@ export async function logout(c) {
 
   session.destroy()
   return c.json({})
+}
+
+/** @type {import('../bindings.js').AppHandler} */
+export async function revoke(c) {
+  const session = c.get('session')
+  const user = await c
+    .get('users')
+    .put(session.user.email, { google: undefined })
+  return c.json(user)
 }
 
 /** @type {import('../bindings.js').AppHandler} */
@@ -157,7 +166,7 @@ export async function postOTP(c) {
 }
 
 /** @type {import('../bindings.js').AppHandler} */
-export async function checkOTP(c) {
+export async function validateOTP(c) {
   const session = c.get('session')
   const data = await c.req.json()
   const url = await c.get('users').getOTP(session.user.email)
@@ -180,7 +189,7 @@ export async function checkOTP(c) {
 
   return c.json(
     {
-      error: 'code dont match',
+      error: 'codes dont match',
     },
     400
   )

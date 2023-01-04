@@ -14,8 +14,7 @@ export default function OTP(props) {
   const [errorMsg, setErrorMsg] = useState('')
 
   /**
-   *
-   * @param {SubmitEvent} event
+   * @type {import('preact').JSX.GenericEventHandler<HTMLFormElement>}
    */
   async function handleSubmit(event) {
     event.preventDefault()
@@ -26,7 +25,7 @@ export default function OTP(props) {
     }
 
     try {
-      mutateUser(post('/api/otp', body), false)
+      mutateUser(post('/api/validate-otp', body), false)
     } catch (error) {
       if (error instanceof FetchError) {
         setErrorMsg(error.info)
@@ -55,6 +54,12 @@ export default function OTP(props) {
   )
 }
 
+/**
+ *
+ * @param {object} props
+ * @param {string} props.errorMessage
+ * @param {import('preact').JSX.GenericEventHandler<HTMLFormElement>} props.onSubmit
+ */
 function Form({ errorMessage, onSubmit }) {
   return (
     <form onSubmit={onSubmit} autoComplete="on">

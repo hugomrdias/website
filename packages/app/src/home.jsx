@@ -2,6 +2,7 @@ import { route } from 'preact-router'
 import { useState } from 'preact/hooks'
 import { useForm } from 'react-hook-form'
 import { Footer, TopBar } from './app.jsx'
+import { useGoogle } from './libs/use-onload.js'
 import useUser from './libs/use-user.js'
 import { get, post } from './libs/utils.js'
 
@@ -9,11 +10,14 @@ import { get, post } from './libs/utils.js'
  * @param {import('preact').Attributes} props
  */
 export default function Home(props) {
+  const { google } = useGoogle({
+    client_id:
+      '988377666163-om4unmof6tv868hhgpk5m31dtr2e74nb.apps.googleusercontent.com',
+  })
   const [isSaving, setIsSaving] = useState(false)
   const { user, mutateUser } = useUser({
     redirectTo: '/login',
   })
-
   const {
     register,
     handleSubmit,
@@ -60,17 +64,31 @@ export default function Home(props) {
         <button
           type="button"
           onClick={async () => {
-            // @ts-ignore
-            // eslint-disable-next-line no-undef
-            google.accounts.id.revoke(user?.email, (done) => {
-              console.log('consent revoked')
-            })
             await post('/api/logout')
             mutateUser(undefined, false)
             route('/login')
           }}
         >
           Logout
+        </button>
+        <button
+          type="button"
+          disabled={!(user && user.google && google)}
+          onClick={async () => {
+            if (google && user) {
+              google.accounts.id.revoke(user.email, async (done) => {
+                if (done.successful) {
+                  google.accounts.id.disableAutoSelect()
+                  mutateUser(await post('/api/revoke'), false)
+                } else {
+                  // eslint-disable-next-line no-console
+                  console.log(done.error)
+                }
+              })
+            }
+          }}
+        >
+          Revoke Google
         </button>
       </div>
       <Footer />

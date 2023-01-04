@@ -4,15 +4,16 @@ import { getIronSession } from 'iron-session/edge'
 import { subscribe } from './routes/feedbin.js'
 import { getMeta, metaValidator } from './routes/get-meta.js'
 import {
-  checkOTP,
+  validateOTP,
   getOTP,
   getUser,
   logout,
-  postFinishLogin,
+  validateEmail,
   postLogin,
   postOTP,
   postUser,
-  postValidate,
+  validateGoogle,
+  revoke,
 } from './routes/login.js'
 import { bookmark } from './routes/ticktick.js'
 import { Email } from './utils/email.js'
@@ -76,17 +77,20 @@ app.get('/api', (c, next) => {
   return c.json(c.env)
 })
 
+// Auth
 app.post('/api/login', postLogin)
-app.post('/api/finish-login', postFinishLogin)
-app.post('/api/validate', postValidate)
-app.post('/api/otp', checkOTP)
+app.post('/api/validate-email', validateEmail)
+app.post('/api/validate-google', validateGoogle)
+app.post('/api/validate-otp', validateOTP)
 app.post('/api/logout', logout)
+app.post('/api/revoke', revoke)
 app.get('/api/user', auth, getUser)
 app.post('/api/user', auth, postUser)
 app.get('/api/user/otp', auth, getOTP)
 app.post('/api/user/otp', auth, postOTP)
-app.get('/api/meta', auth, metaValidator(), getMeta)
 
+// API
+app.get('/api/meta', auth, metaValidator(), getMeta)
 app.post('/api/subscribe', auth, subscribe)
 app.post('/api/bookmark', auth, bookmark)
 

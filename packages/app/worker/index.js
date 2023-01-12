@@ -14,6 +14,10 @@ import {
   postUser,
   validateGoogle,
   revoke,
+  registerPasskey,
+  registerVerifyPasskey,
+  tempPasskey,
+  authVerifyPasskey,
 } from './routes/login.js'
 import { bookmark } from './routes/ticktick.js'
 import { Email } from './utils/email.js'
@@ -82,6 +86,10 @@ app.post('/api/login', postLogin)
 app.post('/api/validate-email', validateEmail)
 app.post('/api/validate-google', validateGoogle)
 app.post('/api/validate-otp', validateOTP)
+app.post('/api/passkey/register', registerPasskey)
+app.post('/api/passkey/register-verify', registerVerifyPasskey)
+app.post('/api/passkey/auth-verify', authVerifyPasskey)
+app.get('/api/passkey/temp', tempPasskey)
 app.post('/api/logout', logout)
 app.post('/api/revoke', revoke)
 app.get('/api/user', auth, getUser)

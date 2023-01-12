@@ -25,7 +25,7 @@ export default function OTP(props) {
     }
 
     try {
-      mutateUser(post('/api/validate-otp', body), false)
+      mutateUser(post('/api/validate-otp', body))
     } catch (error) {
       if (error instanceof FetchError) {
         setErrorMsg(error.info)

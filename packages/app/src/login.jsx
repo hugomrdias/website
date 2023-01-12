@@ -1,8 +1,9 @@
 import { route } from 'preact-router'
-import { useState } from 'preact/hooks'
+import { useEffect, useState } from 'preact/hooks'
+import { credentialsCreate, credentialsGet } from './libs/passkeys.js'
 import { useGoogle } from './libs/use-onload.js'
 import useUser from './libs/use-user.js'
-import { FetchError, post } from './libs/utils.js'
+import { FetchError, get, post } from './libs/utils.js'
 
 /**
  * @param {import('preact').Attributes} props
@@ -61,6 +62,7 @@ export default function Login(props) {
     <>
       <div className="login">
         <Form errorMessage={errorMsg} onSubmit={handleSubmit} />
+        <Passkey mutateUser={mutateUser} />
       </div>
 
       <style jsx>{`
@@ -122,5 +124,61 @@ function Form({ errorMessage, onSubmit }) {
         }
       `}</style>
     </form>
+  )
+}
+
+function Passkey({ mutateUser }) {
+  const [errorMsg, setErrorMsg] = useState('')
+  useEffect(() => {
+    async function run() {
+      const temp = await get('/api/passkey/temp')
+      const creds = await credentialsGet(temp.challenge)
+      const rsp = post('/api/passkey/auth-verify', creds)
+      mutateUser(rsp)
+    }
+    run()
+  }, [])
+
+  async function onSubmit(event) {
+    event.preventDefault()
+
+    const body = {
+      // @ts-ignore
+      username: event.currentTarget?.username.value,
+    }
+
+    try {
+      const opts = await post('/api/passkey/register', body)
+      const registerData = await credentialsCreate(opts)
+      const rsp = await post('/api/passkey/register-verify', registerData)
+      console.log('🚀 ~ file: login.jsx:149 ~ onSubmit ~ rsp', rsp)
+      mutateUser()
+    } catch (error) {
+      if (error instanceof FetchError) {
+        setErrorMsg(error.info)
+      } else {
+        // eslint-disable-next-line no-console
+        console.error('An unexpected error happened:', error)
+      }
+    }
+  }
+
+  return (
+    <>
+      <form onSubmit={onSubmit} autoComplete="on">
+        <label>
+          <span>Type your username</span>
+          <input
+            type="text"
+            name="username"
+            placeholder="joe"
+            autoComplete="webauthn"
+          />
+        </label>
+        <button type="submit">Login with passkey</button>
+
+        {errorMsg && <p className="error">{errorMsg}</p>}
+      </form>
+    </>
   )
 }

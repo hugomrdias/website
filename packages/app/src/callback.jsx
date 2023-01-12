@@ -27,7 +27,7 @@ export default function Callback(props) {
     }
 
     finishLogin()
-  })
+  }, [])
 
   return <></>
 }

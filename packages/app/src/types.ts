@@ -1,3 +1,5 @@
+import { AuthenticatorTransportFuture } from '../worker/utils/types.js'
+
 export interface User {
   email: string
   gravatar: string
@@ -6,6 +8,13 @@ export interface User {
   feedbin?: string
   tickProject?: string
   google?: TokenPayload
+  passkey: {
+    id: string
+    counter: number
+    publicKey: string
+    transports?: AuthenticatorTransportFuture[]
+    type: 'public-key'
+  }
 }
 
 export interface TokenPayload {

@@ -36,6 +36,7 @@ export function useGoogle(config, prompt = false) {
   useOnload(() => {
     globalThis.google.accounts.id.initialize(config)
 
+    console.log('🚀 ~ file: use-onload.js:40 ~ useOnload ~ prompt', prompt)
     if (prompt) {
       globalThis.google.accounts.id.prompt()
     }

@@ -3,6 +3,14 @@ import { buildURL, parse, totp } from 'micro-otp'
 import { generateKey } from '../utils/otp.js'
 import QRCode from 'qrcode'
 import { getGoogleCerts, verifyToken } from '../utils/google.js'
+import { createPasskeyOptions, generateChallenge } from '../utils/passkeys.js'
+import { base64url, utf8 } from 'iso-base'
+import {
+  base64CBORToObject,
+  base64ToObject,
+  hash,
+  parseAuthenticatorData,
+} from '../utils/passkeys/encoding.js'
 
 /** @type {import('../bindings.js').AppHandler} */
 export async function postLogin(c) {
@@ -193,4 +201,177 @@ export async function validateOTP(c) {
     },
     400
   )
+}
+
+/** @type {import('../bindings.js').AppHandler} */
+export async function registerPasskey(c) {
+  const data = await c.req.json()
+  const session = c.get('session')
+
+  const user = await c.get('users').get(data.username)
+
+  /** @type {import('../utils/types.js').PublicKeyCredentialDescriptorJSON[]} */
+  const excludeCredentials = []
+
+  if (user) {
+    excludeCredentials.push({
+      id: user.passkey.id,
+      type: 'public-key',
+      transports: user.passkey.transports,
+    })
+  }
+  const opts = createPasskeyOptions({
+    userId: data.username,
+    supportedAlgorithmIDs: [-8, -7, -257],
+    excludeCredentials,
+  })
+  const out = {
+    email: data.username,
+    isLoggedIn: false,
+    otp: false,
+    challenge: opts.challenge,
+  }
+
+  session.user = out
+  await session.save()
+  return c.json(opts)
+}
+
+/** @type {import('../bindings.js').AppHandler} */
+export async function registerVerifyPasskey(c) {
+  const data =
+    /** @type {import('../utils/types.js').RegistrationResponseJSON} */ (
+      await c.req.json()
+    )
+  const session = c.get('session')
+  console.log(
+    '🚀 ~ file: login.js:227 ~ registerVerifyPasskey ~ session',
+    session
+  )
+
+  const expectedChallenge = session.user.challenge
+  const rpID = 'localhost'
+  const expectedOrigin = `https://${rpID}`
+
+  const {
+    id,
+    rawId,
+    type,
+    response,
+    clientExtensionResults,
+    authenticatorAttachment,
+  } = data
+
+  const { clientDataJSON, transports, attestationObject } = response
+
+  /** @type {import('../utils/types.js').ClientDataJSON} */
+  const parsedClientData = base64ToObject(clientDataJSON)
+
+  if (expectedChallenge !== parsedClientData.challenge) {
+    throw new Error('challenge dont match')
+  }
+
+  /** @type {import('../utils/passkeys/types.js').AttestationObject} */
+  const parsedAttestation = base64CBORToObject(attestationObject)
+
+  const { attStmt, authData, fmt } = parsedAttestation
+
+  const { credentialID, rpIdHash, credentialPublicKeyBytes, signCount } =
+    parseAuthenticatorData(authData)
+
+  if (
+    base64url.encode(await hash(utf8.decode(rpID))) !==
+    base64url.encode(rpIdHash)
+  ) {
+    throw new Error('RP dont match')
+  }
+
+  const user = await c
+    .get('users')
+    .getOrCreate(/** @type {string} */ (session.user.email))
+
+  await c.get('users').put(session.user.email, {
+    passkey: {
+      id: base64url.encode(credentialID),
+      counter: signCount,
+      publicKey: base64url.encode(credentialPublicKeyBytes),
+      transports,
+      type,
+    },
+  })
+
+  const out = { email: session.user.email, isLoggedIn: true, otp: false }
+  session.user = out
+  await session.save()
+  return c.json(out)
+}
+
+/** @type {import('../bindings.js').AppHandler} */
+export async function tempPasskey(c) {
+  const session = c.get('session')
+
+  const challenge = base64url.encode(generateChallenge())
+  const out = {
+    email: '',
+    isLoggedIn: false,
+    otp: false,
+    challenge,
+  }
+
+  session.user = out
+  await session.save()
+  return c.json({
+    challenge,
+  })
+}
+
+/** @type {import('../bindings.js').AppHandler} */
+export async function authVerifyPasskey(c) {
+  const data =
+    /** @type {import('../utils/types.js').RegistrationResponseJSON} */ (
+      await c.req.json()
+    )
+  const session = c.get('session')
+  const expectedChallenge = session.user.challenge
+  const rpID = 'localhost'
+  const expectedOrigin = `https://${rpID}`
+
+  const {
+    id,
+    rawId,
+    type,
+    response,
+    clientExtensionResults,
+    authenticatorAttachment,
+  } = data
+
+  const { clientDataJSON, transports, authenticatorData, userHandle } = response
+
+  /** @type {import('../utils/types.js').ClientDataJSON} */
+  const parsedClientData = base64ToObject(clientDataJSON)
+
+  if (expectedChallenge !== parsedClientData.challenge) {
+    throw new Error('challenge dont match')
+  }
+
+  // const { credentialID, rpIdHash, credentialPublicKeyBytes, signCount } =
+  //   parseAuthenticatorData(authenticatorData)
+
+  // if (
+  //   base64url.encode(await hash(utf8.decode(rpID))) !==
+  //   base64url.encode(rpIdHash)
+  // ) {
+  //   throw new Error('RP dont match')
+  // }
+
+  const username = utf8.encode(base64url.decode(userHandle))
+
+  const user = await c
+    .get('users')
+    .getOrCreate(/** @type {string} */ (username))
+
+  const out = { email: username, isLoggedIn: true, otp: false }
+  session.user = out
+  await session.save()
+  return c.json(user)
 }

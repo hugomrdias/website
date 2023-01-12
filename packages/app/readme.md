@@ -63,9 +63,9 @@ a786a7
 
 # Readability
 
-https://github.com/WebReflection/linkedom
-https://github.com/mozilla/readability
-https://github.com/postlight/parser
+- https://github.com/WebReflection/linkedom
+- https://github.com/mozilla/readability
+- https://github.com/postlight/parser
 
 ## Extract Metadata
 
@@ -73,14 +73,14 @@ https://github.com/gorango/rehype-extract-meta/blob/main/lib/candidates.js
 
 # passkeys
 
-https://webauthn.guide/
-https://webauthn.io/
-https://passkeys.dev/
-https://www.passkeys.io/
-https://github.com/MasterKale/SimpleWebAuthn
-https://web.dev/passkey-registration/
-https://web.dev/passkey-form-autofill/
-https://developers.google.com/identity/passkeys
-https://developers.yubico.com/Passkeys/
-https://www.hanko.io/blog/passkeys-part-1
-https://github.com/herrjemand/awesome-webauthn
+- https://webauthn.guide/
+- https://webauthn.io/
+- https://passkeys.dev/
+- https://www.passkeys.io/
+- https://github.com/MasterKale/SimpleWebAuthn
+- https://web.dev/passkey-registration/
+- https://web.dev/passkey-form-autofill/
+- https://developers.google.com/identity/passkeys
+- https://developers.yubico.com/Passkeys/
+- https://www.hanko.io/blog/passkeys-part-1
+- https://github.com/herrjemand/awesome-webauthn

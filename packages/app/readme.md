@@ -23,9 +23,9 @@ pnpm run deploy
 
 ## Favicon
 
-https://fonts.google.com/icons?icon.query=network&icon.style=Outlined
-https://evilmartians.com/chronicles/how-to-favicon-in-2021-six-files-that-fit-most-needs
-https://jakearchibald.github.io/svgomg/
+- https://fonts.google.com/icons?icon.query=network&icon.style=Outlined
+- https://evilmartians.com/chronicles/how-to-favicon-in-2021-six-files-that-fit-most-needs
+- https://jakearchibald.github.io/svgomg/
 
 Theres a figma doc for sizing
 png 192 and 512 should have borders

@@ -30,7 +30,7 @@
   "devDependencies": {
     "hd-scripts": "^3.0.2",
     "typescript": "4.9.4",
-    "vite": "^4.0.3"
+    "vite": "^4.0.5"
   },
   "peerDependencies": {
     "vite": "^4.0.0"

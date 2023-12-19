@@ -6,13 +6,13 @@ const baseURL = 'https://hugodias.me'
 function info() {
   return {
     name: 'Hugo Dias',
-    title: 'Hugo Dias - Porto, Portugal, Protocol Labs',
+    title: 'Hugo Dias - Porto, Portugal, Fission',
     url: baseURL,
     domain: 'hugodias.me',
     lang: 'en',
     locale: 'en_us',
     image: baseURL + '/assets/images/avatar.jpg',
-    description: 'Writing software for Web3.',
+    description: 'Writing code for Web3.',
     author: {
       name: 'Hugo Dias',
       twitterHandle: 'hugomrdias',

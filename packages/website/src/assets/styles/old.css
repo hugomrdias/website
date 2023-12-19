@@ -358,6 +358,14 @@ hr:before {
   fill: #6967db !important;
 }
 
+#icons01 .n04:hover {
+  border-color: #777 !important;
+}
+
+#icons01 .n04:hover svg {
+  fill: #777 !important;
+}
+
 @media (max-width: 1920px) {
 }
 

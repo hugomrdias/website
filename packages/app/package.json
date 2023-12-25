@@ -18,7 +18,7 @@
     "@simplewebauthn/typescript-types": "6.3.0-alpha.1",
     "@web3-storage/worker-utils": "0.4.3-dev",
     "cbor-x": "^1.5.0",
-    "hono": "^2.7.0",
+    "hono": "^3.11.7",
     "iron-session": "^6.3.1",
     "iso-base": "workspace:^0.0.1",
     "linkedom": "^0.14.21",
